@@ -26,7 +26,6 @@ if [ "$scriptchecker" != "" ]; then
 		echo -e "---";
 		echo -e "Jika Anda sebelumnya gagal dalam instalasi, Mohon untuk reinstall OS VPS Anda lebih dulu!";
 		echo -e "Anda dapat mereinstall OS VPS Anda melalui VPS Control Panel";
-		echo -e "Cara Mengakses VPS Control Panel: bit.ly/caraaksesvpspanel";
 		echo -e " ";
         exit 0;
 	else
@@ -276,13 +275,13 @@ sed -i $MYIP2 /etc/squid3/squid.conf;
 service squid3 restart
 
 # install webmin
-cd
-wget "http://script.hostingtermurah.net/repo/webmin_1.801_all.deb"
-dpkg --install webmin_1.801_all.deb;
-apt-get -y -f install;
-sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
-rm /root/webmin_1.801_all.deb
-service webmin restart
+#cd
+#wget "http://script.hostingtermurah.net/repo/webmin_1.801_all.deb"
+#dpkg --install webmin_1.801_all.deb;
+#apt-get -y -f install;
+#sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
+#rm /root/webmin_1.801_all.deb
+#service webmin restart
 service vnstat restart
 
 # install mrtg
@@ -309,14 +308,14 @@ apt-get -y install openvpn easy-rsa openssl iptables
 cp -r /usr/share/easy-rsa/ /etc/openvpn
 mkdir /etc/openvpn/easy-rsa/keys
 # ganti bits
-sed -i 's|export KEY_COUNTRY="US"|export KEY_COUNTRY="ID"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_PROVINCE="CA"|export KEY_PROVINCE="Jawa Barat"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_CITY="SanFrancisco"|export KEY_CITY="Bandung"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_ORG="Fort-Funston"|export KEY_ORG="HostingTermurah.net"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_EMAIL="me@myhost.mydomain"|export KEY_EMAIL="sales@hostingtermurah.net"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_OU="MyOrganizationalUnit"|export KEY_OU="HostingTermurah.net"|' /etc/openvpn/easy-rsa/vars
+sed -i 's|export KEY_COUNTRY="US"|export KEY_COUNTRY="TH"|' /etc/openvpn/easy-rsa/vars
+sed -i 's|export KEY_PROVINCE="CA"|export KEY_PROVINCE="BKK"|' /etc/openvpn/easy-rsa/vars
+sed -i 's|export KEY_CITY="SanFrancisco"|export KEY_CITY="Bangkok"|' /etc/openvpn/easy-rsa/vars
+sed -i 's|export KEY_ORG="Fort-Funston"|export KEY_ORG="siamware.me"|' /etc/openvpn/easy-rsa/vars
+sed -i 's|export KEY_EMAIL="me@myhost.mydomain"|export KEY_EMAIL="sales@siamware.me"|' /etc/openvpn/easy-rsa/vars
+sed -i 's|export KEY_OU="MyOrganizationalUnit"|export KEY_OU="Siamware.Me"|' /etc/openvpn/easy-rsa/vars
 sed -i 's|export KEY_NAME="EasyRSA"|export KEY_NAME="server"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_OU=changeme|export KEY_OU=HostingTermurah|' /etc/openvpn/easy-rsa/vars
+sed -i 's|export KEY_OU=changeme|export KEY_OU=SiamwaRe|' /etc/openvpn/easy-rsa/vars
 #Buat Diffie-Helman Pem
 openssl dhparam -out /etc/openvpn/dh2048.pem 2048
 # Buat PKI
@@ -371,7 +370,7 @@ END
 #Create OpenVPN Config
 mkdir -p /home/vps/public_html
 cat > /home/vps/public_html/client.ovpn <<-END
-# Config by lnwsus
+# Config by Gitem
 client
 dev tun
 proto tcp
@@ -401,8 +400,8 @@ echo '<ca>' >> /home/vps/public_html/client.ovpn
 cat /etc/openvpn/ca.crt >> /home/vps/public_html/client.ovpn
 echo '</ca>' >> /home/vps/public_html/client.ovpn
 cd /home/vps/public_html/
-tar -czf /home/vps/public_html/openvpn.tar.gz client.ovpn
-tar -czf /home/vps/public_html/client.tar.gz client.ovpn
+#tar -czf /home/vps/public_html/openvpn.tar.gz client.ovpn
+#tar -czf /home/vps/public_html/client.tar.gz client.ovpn
 cd
 
 # Restart openvpn
@@ -475,28 +474,44 @@ sed -i '$ i\iptables-restore < /etc/iptables.up.rules' /etc/rc.local
 sed -i $MYIP2 /etc/iptables.up.rules;
 iptables-restore < /etc/iptables.up.rules
 
-#  download script
+#block torrent
+iptables -A OUTPUT -p tcp --dport 6881:6889 -j DROP
+iptables -A OUTPUT -p udp --dport 1024:65534 -j DROP
+iptables -A FORWARD -m string --string "get_peers" --algo bm -j DROP
+iptables -A FORWARD -m string --string "announce_peer" --algo bm -j DROP
+iptables -A FORWARD -m string --string "find_node" --algo bm -j DROP
+iptables -A FORWARD -m string --algo bm --string "BitTorrent" -j DROP
+iptables -A FORWARD -m string --algo bm --string "BitTorrent protocol" -j DROP
+iptables -A FORWARD -m string --algo bm --string "peer_id=" -j DROP
+iptables -A FORWARD -m string --algo bm --string ".torrent" -j DROP
+iptables -A FORWARD -m string --algo bm --string "announce.php?passkey=" -j DROP
+iptables -A FORWARD -m string --algo bm --string "torrent" -j DROP
+iptables -A FORWARD -m string --algo bm --string "announce" -j DROP
+iptables -A FORWARD -m string --algo bm --string "info_hash" -j DROP
+
+# download script
 cd /usr/bin
-wget -O menu "http://tepsus-slow-vpn.xyz/Debian/menu.sh"
-wget -O 1 "http://tepsus-slow-vpn.xyz/Debian/adduser.sh"
-wget -O 2 "http://tepsus-slow-vpn.xyz/Debian/testuser.sh"
-wget -O 3 "http://tepsus-slow-vpn.xyz/Debian/rename.sh"
-wget -O 4 "http://tepsus-slow-vpn.xyz/Debian/repass.sh"
-wget -O 5 "http://tepsus-slow-vpn.xyz/Debian/delet.sh"
-wget -O 6 "http://tepsus-slow-vpn.xyz/Debian/deletuserxp.sh"
-wget -O 7 "http://tepsus-slow-vpn.xyz/Debian/viewuser.sh"
-wget -O 8 "http://tepsus-slow-vpn.xyz/Debian/restart.sh"
-wget -O 9 "http://tepsus-slow-vpn.xyz/Debian/speedtest.py"
-wget -O 10 "http://tepsus-slow-vpn.xyz/Debian/vnstat.sh"
-wget -O 11 "http://tepsus-slow-vpn.xyz/Debian/lock.sh"
-wget -O 12 "http://tepsus-slow-vpn.xyz/Debian/unlock.sh"
-wget -O 13 "http://tepsus-slow-vpn.xyz/Debian/httpcredit.sh"
-wget -O 14 "http://tepsus-slow-vpn.xyz/Debian/setreboot.sh"
-wget -O 15 "http://speedvpn.store/scrip/free/backup"
-wget -O 16 "http://tepsus-slow-vpn.xyz/Debian/setspeed.sh"
-wget -O 17 "http://tepsus-slow-vpn.xyz/Debian/Changpasswdroot.sh"
-wget -O 18 "http://tepsus-slow-vpn.xyz/Debian/delete-all-users.sh"
-wget -O 19 "http://tepsus-slow-vpn.xyz/Debian/viewlogin.sh"
+wget -O menu "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/menu.sh"
+wget -O 1 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/adduser.sh"
+wget -O 2 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/testuser.sh"
+wget -O 3 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/rename.sh"
+wget -O 4 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/repass.sh"
+wget -O 5 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/delet.sh"
+wget -O 6 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/deletuserxp.sh"
+wget -O 7 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/viewuser.sh"
+wget -O 8 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/restart.sh"
+wget -O 9 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/speedtest.py"
+wget -O 10 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/online.sh"
+wget -O 11 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/viewlogin.sh"
+wget -O 12 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/aboutsystem.sh"
+wget -O 13 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/lock.sh"
+wget -O 14 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/unlock.sh"
+wget -O 15 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/logscrip.sh"
+wget -O 16 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/aboutscrip.sh"
+wget -O 17 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/httpcredit.sh"
+wget -O 18 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/TimeReboot.sh"
+wget -O 19 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/backup.sh
+#wget -O 20 "https://raw.githubusercontent.com/dinfucker/SCRIPT-VPN/master/MENU/bandwidth.html
 
 echo "0 0 * * * root /sbin/reboot" > /etc/cron.d/reboot
 
@@ -539,5 +554,5 @@ sysv-rc-conf rc.local on
 #clearing history
 history -c
 
-# Setup by lnwsus
+# Setup by Gitem
 
